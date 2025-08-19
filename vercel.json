@@ -13,10 +13,5 @@
   "env": {
     "PYTHONPATH": ".",
     "VERCEL_ENV": "production"
-  },
-  "functions": {
-    "api/main.py": {
-      "maxDuration": 30
-    }
   }
 } 
