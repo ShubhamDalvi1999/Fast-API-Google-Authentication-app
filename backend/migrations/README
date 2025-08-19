@@ -1,0 +1,26 @@
+Generic single-database configuration with Alembic for FastAPI Auth App.
+
+## Running Migrations
+
+### Local Development
+
+1. Generate migration script:
+```
+cd backend
+alembic revision --autogenerate -m "Initial migration"
+```
+
+2. Apply migration:
+```
+alembic upgrade head
+```
+
+### Vercel Deployment
+
+Migrations in Vercel need to be run manually before deployment using:
+
+```
+DATABASE_URL=your_neon_db_url alembic upgrade head
+```
+
+This should be done after each schema change. 

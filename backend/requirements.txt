@@ -1,0 +1,11 @@
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+pydantic-settings
+pydantic-core
+httpx
+python-dotenv 
