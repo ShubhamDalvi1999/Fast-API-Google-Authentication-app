@@ -9,6 +9,7 @@ load_dotenv()
 class Settings(BaseSettings):
     # Database settings - use SQLite for local development, PostgreSQL for production
     DATABASE_URL: str = "sqlite:///./database.db"
+    DATABASE_URL_UNPOOLED: Optional[str] = None
     
     # JWT settings
     SECRET_KEY: str = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
@@ -49,7 +50,11 @@ if os.environ.get("VERCEL_ENV") == "production":
     
     # Update redirect URI for production
     if not settings.GOOGLE_REDIRECT_URI.startswith("https://"):
-        settings.GOOGLE_REDIRECT_URI = "https://fast-api-google-authentication-bqox186fi.vercel.app/auth/google/callback"
+        settings.GOOGLE_REDIRECT_URI = "https://fast-api-google-authentication-kwvqzt2cd.vercel.app/auth/google/callback"
+    
+    # Use DATABASE_URL_UNPOOLED if DATABASE_URL is not set
+    if settings.DATABASE_URL == "sqlite:///./database.db" and settings.DATABASE_URL_UNPOOLED:
+        settings.DATABASE_URL = settings.DATABASE_URL_UNPOOLED
 else:
     # Local development: ensure we use SQLite
     if not settings.DATABASE_URL.startswith("sqlite://"):
