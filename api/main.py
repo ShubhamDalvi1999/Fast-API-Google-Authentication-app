@@ -1,5 +1,6 @@
-# api/main.py - Test environment variables
+# api/main.py - Test backend imports
 import os
+import sys
 from fastapi import FastAPI
 
 app = FastAPI()
@@ -21,4 +22,35 @@ async def env_test():
         "GOOGLE_REDIRECT_URI": "SET" if os.environ.get("GOOGLE_REDIRECT_URI") else "NOT SET",
         "SECRET_KEY": "SET" if os.environ.get("SECRET_KEY") else "NOT SET",
         "DATABASE_URL_UNPOOLED": "SET" if os.environ.get("DATABASE_URL_UNPOOLED") else "NOT SET"
-    } 
+    }
+
+@app.get("/api/import-test")
+async def import_test():
+    results = {}
+    
+    # Test basic imports
+    try:
+        from backend.app.core.config import settings
+        results["config"] = "✅ SUCCESS"
+    except Exception as e:
+        results["config"] = f"❌ FAILED: {str(e)}"
+    
+    try:
+        from backend.app.db.database import engine
+        results["database"] = "✅ SUCCESS"
+    except Exception as e:
+        results["database"] = f"❌ FAILED: {str(e)}"
+    
+    try:
+        from backend.app.models.models import User
+        results["models"] = "✅ SUCCESS"
+    except Exception as e:
+        results["models"] = f"❌ FAILED: {str(e)}"
+    
+    try:
+        from backend.app.core.auth import router
+        results["auth"] = "✅ SUCCESS"
+    except Exception as e:
+        results["auth"] = f"❌ FAILED: {str(e)}"
+    
+    return results 
