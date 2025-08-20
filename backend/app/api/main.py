@@ -18,7 +18,7 @@ if parent_dir not in sys.path:
 # Fix imports for different environments
 try:
     # Try relative imports first (when running from backend directory)
-    from ..db.database import Base, engine, SessionLocal
+    from ..db.database import Base, get_engine, get_db
     from ..models.models import User
     from ..core import auth
     from ..core.auth import get_current_user
@@ -26,14 +26,14 @@ try:
 except ImportError:
     try:
         # Try absolute imports with backend prefix (for Vercel)
-        from backend.app.db.database import Base, engine, SessionLocal
+        from backend.app.db.database import Base, get_engine, get_db
         from backend.app.models.models import User
         from backend.app.core import auth
         from backend.app.core.auth import get_current_user
         print("Using backend.app.* imports")
     except ImportError:
         # Fallback to local imports (assuming we're in the app directory structure)
-        from app.db.database import Base, engine, SessionLocal
+        from app.db.database import Base, get_engine, get_db
         from app.models.models import User
         from app.core import auth
         from app.core.auth import get_current_user
@@ -66,6 +66,7 @@ except Exception as e:
 # Create database tables on startup, but only once
 if not tables_created:
     try:
+        engine = get_engine()
         Base.metadata.create_all(bind=engine)
         tables_created = True
         print("Database tables created successfully")
@@ -76,14 +77,6 @@ if not tables_created:
     except Exception as e:
         print(f"Error creating tables: {str(e)}")
         # In production, this might be expected if tables already exist
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 
 db_dependency = Annotated[Session, Depends(get_db)]
 user_dependency = Annotated[dict, Depends(get_current_user)]
@@ -163,10 +156,9 @@ async def debug_info():
         # Test database connection without exposing credentials
         db_status = "Not tested"
         try:
-            db = SessionLocal()
-            # Use text() for raw SQL queries with SQLAlchemy 2.0+
-            result = db.execute(text("SELECT 1")).scalar()
-            db.close()
+            engine = get_engine()
+            with engine.connect() as conn:
+                result = conn.execute(text("SELECT 1")).scalar()
             db_status = f"Connected successfully (test query result: {result})"
         except Exception as e:
             db_status = f"Connection failed: {str(e)}"
@@ -189,10 +181,9 @@ async def debug_info():
 async def test_db_connection():
     try:
         # Test creating a session
-        db = SessionLocal()
-        # Run a simple query with text() for SQLAlchemy 2.0+ compatibility
-        result = db.execute(text("SELECT 1")).scalar()
-        db.close()
+        engine = get_engine()
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT 1")).scalar()
         return {"status": "ok", "connected": True, "test_query": result}
     except Exception as e:
         return {"status": "error", "message": str(e), "traceback": traceback.format_exc()}
@@ -205,34 +196,33 @@ async def check_db_status():
         from sqlalchemy import inspect, text
         
         # Test connection
-        db = SessionLocal()
-        db.execute(text("SELECT 1"))
-        
-        # Check tables
-        inspector = inspect(engine)
-        tables = inspector.get_table_names()
-        
-        # Check if users table exists and get column info
-        users_table_info = None
-        if 'users' in tables:
-            users_columns = inspector.get_columns('users')
-            users_table_info = {
-                "exists": True,
-                "columns": [col['name'] for col in users_columns]
-            }
-        else:
-            users_table_info = {"exists": False}
-        
-        # Check if there are any users in the database
-        user_count = 0
-        if 'users' in tables:
-            try:
-                result = db.execute(text("SELECT COUNT(*) FROM users")).scalar()
-                user_count = result
-            except:
-                user_count = "Unable to count"
-        
-        db.close()
+        engine = get_engine()
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+            
+            # Check tables
+            inspector = inspect(engine)
+            tables = inspector.get_table_names()
+            
+            # Check if users table exists and get column info
+            users_table_info = None
+            if 'users' in tables:
+                users_columns = inspector.get_columns('users')
+                users_table_info = {
+                    "exists": True,
+                    "columns": [col['name'] for col in users_columns]
+                }
+            else:
+                users_table_info = {"exists": False}
+            
+            # Check if there are any users in the database
+            user_count = 0
+            if 'users' in tables:
+                try:
+                    result = conn.execute(text("SELECT COUNT(*) FROM users")).scalar()
+                    user_count = result
+                except:
+                    user_count = "Unable to count"
         
         return {
             "status": "ok",

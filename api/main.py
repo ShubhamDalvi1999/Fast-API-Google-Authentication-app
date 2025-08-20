@@ -37,7 +37,7 @@ async def import_test():
     
     try:
         # Test importing database modules without initializing engine
-        from backend.app.db.database import Base, get_engine, get_session_local
+        from backend.app.db.database import Base, get_engine, get_session_local, get_db
         results["database_import"] = "✅ SUCCESS"
     except Exception as e:
         results["database_import"] = f"❌ FAILED: {str(e)}"

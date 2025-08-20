@@ -20,20 +20,20 @@ if parent_dir not in sys.path:
 # Fix imports for different environments
 try:
     # Try relative imports first
-    from ..db.database import SessionLocal
+    from ..db.database import get_db
     from ..models.models import User
     from .google_oauth import google_oauth_service
     print("Auth: Using relative imports")
 except ImportError:
     try:
         # Try absolute imports with backend prefix
-        from backend.app.db.database import SessionLocal
+        from backend.app.db.database import get_db
         from backend.app.models.models import User
         from backend.app.core.google_oauth import google_oauth_service
         print("Auth: Using backend.app.* imports")
     except ImportError:
         # Fallback to local imports
-        from app.db.database import SessionLocal
+        from app.db.database import get_db
         from app.models.models import User
         from app.core.google_oauth import google_oauth_service
         print("Auth: Using app.* imports")
@@ -73,13 +73,6 @@ class GoogleAuthRequest(BaseModel):
 
 # In-memory storage for OAuth state (use Redis in production)
 oauth_states = {}
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 db_dependency = Annotated[Session, Depends(get_db)]
 
