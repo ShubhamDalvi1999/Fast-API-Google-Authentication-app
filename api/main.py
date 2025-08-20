@@ -62,6 +62,7 @@ async def db_test():
     try:
         from backend.app.db.database import get_engine
         from backend.app.core.config import settings
+        from sqlalchemy import text
         
         # Log the original database URL (without credentials)
         original_url = settings.DATABASE_URL
@@ -104,11 +105,13 @@ async def db_test():
         else:
             masked_engine_url = engine_url
         
-        # Test connection
+        # Test connection with SQLAlchemy 2.0 compatible syntax
         with engine.connect() as conn:
-            result = conn.execute("SELECT 1")
+            result = conn.execute(text("SELECT 1"))
+            test_result = result.scalar()
             return {
                 "database": "✅ SUCCESS - Connected",
+                "test_query_result": test_result,
                 "original_url": masked_original,
                 "engine_url": masked_engine_url,
                 "psycopg2_version": psycopg2_version,
