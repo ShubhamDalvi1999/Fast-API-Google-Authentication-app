@@ -1,4 +1,4 @@
-# api/main.py - Test backend imports
+# api/main.py - Test backend imports without DB initialization
 import os
 import sys
 from fastapi import FastAPI
@@ -36,10 +36,11 @@ async def import_test():
         results["config"] = f"❌ FAILED: {str(e)}"
     
     try:
-        from backend.app.db.database import engine
-        results["database"] = "✅ SUCCESS"
+        # Test importing without initializing engine
+        from backend.app.db.database import SessionLocal, Base
+        results["database_import"] = "✅ SUCCESS"
     except Exception as e:
-        results["database"] = f"❌ FAILED: {str(e)}"
+        results["database_import"] = f"❌ FAILED: {str(e)}"
     
     try:
         from backend.app.models.models import User
