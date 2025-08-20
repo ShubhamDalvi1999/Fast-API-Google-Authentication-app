@@ -4,6 +4,15 @@ from sqlalchemy.orm import sessionmaker
 from backend.app.core.config import settings
 import os
 
+# Explicitly register PostgreSQL dialect
+try:
+    import psycopg2
+    # This should register the postgresql dialect
+    from sqlalchemy.dialects import postgresql
+    print("PostgreSQL dialect registered successfully")
+except ImportError as e:
+    print(f"Failed to import psycopg2: {e}")
+
 # Determine if we're in production (Vercel)
 is_production = os.environ.get("VERCEL_ENV") == "production"
 
@@ -11,8 +20,28 @@ is_production = os.environ.get("VERCEL_ENV") == "production"
 def get_engine():
     if is_production:
         # Production: Use PostgreSQL with connection pooling
+        # Ensure the URL uses the correct format
+        db_url = settings.DATABASE_URL
+        
+        # Handle both postgres:// and postgresql:// formats
+        if db_url.startswith("postgres://"):
+            # Convert postgres:// to postgresql:// for SQLAlchemy
+            db_url = db_url.replace("postgres://", "postgresql://")
+        elif db_url.startswith("postgresql://"):
+            # Already in correct format
+            pass
+        else:
+            # Unknown format, try to use as-is
+            pass
+        
+        # Add explicit psycopg2 dialect if not already present
+        if "postgresql://" in db_url and "postgresql+psycopg2://" not in db_url:
+            db_url = db_url.replace("postgresql://", "postgresql+psycopg2://")
+        
+        print(f"Using database URL: {db_url[:50]}...")  # Log first 50 chars for debugging
+        
         return create_engine(
-            settings.DATABASE_URL,
+            db_url,
             pool_pre_ping=True,
             pool_recycle=300,
             pool_size=10,
@@ -20,7 +49,7 @@ def get_engine():
         )
     else:
         # Development: Use SQLite (ignore DATABASE_URL if it's PostgreSQL)
-        if settings.DATABASE_URL.startswith("postgresql://"):
+        if settings.DATABASE_URL.startswith(("postgresql://", "postgres://")):
             # Use SQLite for local development
             return create_engine(
                 "sqlite:///./database.db",

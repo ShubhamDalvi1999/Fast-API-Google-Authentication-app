@@ -61,10 +61,63 @@ async def db_test():
     """Test database connection without importing during startup"""
     try:
         from backend.app.db.database import get_engine
+        from backend.app.core.config import settings
+        
+        # Log the original database URL (without credentials)
+        original_url = settings.DATABASE_URL
+        if original_url.startswith(("postgresql://", "postgres://")):
+            # Mask credentials in the URL
+            parts = original_url.split("@")
+            if len(parts) > 1:
+                masked_original = f"{parts[0].split('://')[0]}://***:***@{parts[1]}"
+            else:
+                masked_original = f"{original_url.split('://')[0]}://***:***@***"
+        else:
+            masked_original = original_url
+            
+        # Test SQLAlchemy dialect registration
+        try:
+            from sqlalchemy.dialects import registry
+            dialects = registry.impls
+            postgres_dialects = [d for d in dialects.keys() if 'postgres' in d.lower()]
+        except Exception as e:
+            postgres_dialects = f"Error checking dialects: {str(e)}"
+        
+        # Test psycopg2 import
+        try:
+            import psycopg2
+            psycopg2_version = psycopg2.__version__
+        except Exception as e:
+            psycopg2_version = f"Import failed: {str(e)}"
+        
+        # Test engine creation
         engine = get_engine()
+        
+        # Get the actual URL used by the engine
+        engine_url = str(engine.url)
+        if engine_url.startswith(("postgresql://", "postgres://")):
+            parts = engine_url.split("@")
+            if len(parts) > 1:
+                masked_engine_url = f"{parts[0].split('://')[0]}://***:***@{parts[1]}"
+            else:
+                masked_engine_url = f"{engine_url.split('://')[0]}://***:***@***"
+        else:
+            masked_engine_url = engine_url
+        
         # Test connection
         with engine.connect() as conn:
             result = conn.execute("SELECT 1")
-            return {"database": "✅ SUCCESS - Connected"}
+            return {
+                "database": "✅ SUCCESS - Connected",
+                "original_url": masked_original,
+                "engine_url": masked_engine_url,
+                "psycopg2_version": psycopg2_version,
+                "postgres_dialects": postgres_dialects,
+                "engine_type": str(type(engine))
+            }
     except Exception as e:
-        return {"database": f"❌ FAILED: {str(e)}"} 
+        return {
+            "database": f"❌ FAILED: {str(e)}",
+            "error_type": type(e).__name__,
+            "original_url": getattr(settings, 'DATABASE_URL', 'Not available')[:50] + "..." if len(getattr(settings, 'DATABASE_URL', '')) > 50 else getattr(settings, 'DATABASE_URL', 'Not available')
+        } 
