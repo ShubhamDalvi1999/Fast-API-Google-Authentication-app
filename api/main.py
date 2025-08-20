@@ -36,8 +36,8 @@ async def import_test():
         results["config"] = f"❌ FAILED: {str(e)}"
     
     try:
-        # Test importing without initializing engine
-        from backend.app.db.database import SessionLocal, Base
+        # Test importing database modules without initializing engine
+        from backend.app.db.database import Base, get_engine, get_session_local
         results["database_import"] = "✅ SUCCESS"
     except Exception as e:
         results["database_import"] = f"❌ FAILED: {str(e)}"
@@ -54,4 +54,17 @@ async def import_test():
     except Exception as e:
         results["auth"] = f"❌ FAILED: {str(e)}"
     
-    return results 
+    return results
+
+@app.get("/api/db-test")
+async def db_test():
+    """Test database connection without importing during startup"""
+    try:
+        from backend.app.db.database import get_engine
+        engine = get_engine()
+        # Test connection
+        with engine.connect() as conn:
+            result = conn.execute("SELECT 1")
+            return {"database": "✅ SUCCESS - Connected"}
+    except Exception as e:
+        return {"database": f"❌ FAILED: {str(e)}"} 
