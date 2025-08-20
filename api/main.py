@@ -1,14 +1,114 @@
-# api/main.py - Test backend imports without DB initialization
+# api/main.py - Complete FastAPI application with Google OAuth
 import os
 import sys
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+from typing import Annotated
 
-app = FastAPI()
+# Import the complete backend application
+try:
+    from backend.app.api.main import app as backend_app
+    from backend.app.db.database import get_db, get_engine
+    from backend.app.core.auth import get_current_user
+    from backend.app.models.models import User
+    from backend.app.core.config import settings
+    print("✅ Successfully imported backend application")
+except Exception as e:
+    print(f"❌ Failed to import backend: {e}")
+    # Create a minimal app if import fails
+    backend_app = FastAPI()
 
+# Create the main app
+app = FastAPI(title="FastAPI Google OAuth App")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000", 
+        "https://*.vercel.app",
+        "https://fast-api-google-authentication-app.vercel.app",
+        "https://fast-api-google-authentication-bqox186fi.vercel.app",
+        "https://fast-api-google-authentication-kwvqzt2cd.vercel.app"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include all routes from the backend app
+app.mount("/api", backend_app)
+
+# Root endpoint
 @app.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "FastAPI Google OAuth Application", "status": "running"}
 
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "message": "Application is running"}
+
+# Test database connection
+@app.get("/test-db")
+async def test_database():
+    try:
+        from backend.app.db.database import get_engine
+        from sqlalchemy import text
+        
+        engine = get_engine()
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT 1"))
+            return {"database": "✅ Connected", "result": result.scalar()}
+    except Exception as e:
+        return {"database": f"❌ Error: {str(e)}"}
+
+# Test Google OAuth configuration
+@app.get("/test-oauth")
+async def test_oauth():
+    try:
+        from backend.app.core.config import settings
+        return {
+            "google_client_id": "✅ SET" if settings.GOOGLE_CLIENT_ID else "❌ NOT SET",
+            "google_client_secret": "✅ SET" if settings.GOOGLE_CLIENT_SECRET else "❌ NOT SET",
+            "google_redirect_uri": settings.GOOGLE_REDIRECT_URI,
+            "environment": settings.ENVIRONMENT
+        }
+    except Exception as e:
+        return {"oauth": f"❌ Error: {str(e)}"}
+
+# Initialize database tables
+@app.post("/init-db")
+async def init_database():
+    try:
+        from backend.app.db.database import get_engine, Base
+        from sqlalchemy import text
+        
+        engine = get_engine()
+        
+        # Create all tables
+        Base.metadata.create_all(bind=engine)
+        
+        # Test the connection
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT COUNT(*) FROM users"))
+            user_count = result.scalar()
+        
+        return {
+            "status": "✅ SUCCESS",
+            "message": "Database tables created successfully",
+            "user_count": user_count
+        }
+    except Exception as e:
+        return {
+            "status": "❌ FAILED",
+            "error": str(e),
+            "error_type": type(e).__name__
+        }
+
+# Keep the test endpoints for debugging
 @app.get("/api/test")
 async def test():
     return {"status": "ok"}
