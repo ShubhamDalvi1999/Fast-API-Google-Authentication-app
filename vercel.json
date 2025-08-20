@@ -13,7 +13,11 @@
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/main.py" },
-    { "src": "/(.*)", "dest": "/frontend/$1" }
+    { "src": "/static/(.*)", "dest": "/frontend/static/$1" },
+    { "src": "/favicon.ico", "dest": "/frontend/favicon.ico" },
+    { "src": "/manifest.json", "dest": "/frontend/manifest.json" },
+    { "src": "/asset-manifest.json", "dest": "/frontend/asset-manifest.json" },
+    { "src": "/(.*)", "dest": "/frontend/index.html" }
   ],
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/build",

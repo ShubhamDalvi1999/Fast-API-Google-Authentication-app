@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Settings(BaseSettings):
-    # Database settings - use PostgreSQL for production
+    # Database settings - use SQLite for local development, PostgreSQL for production
     DATABASE_URL: str = "sqlite:///./database.db"
     
     # JWT settings
@@ -26,7 +26,7 @@ class Settings(BaseSettings):
         "http://localhost:3001",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:3001",
-        "https://fast-api-google-authentication-app.vercel.app",
+        "https://fast-api-google-authentication-bqox186fi.vercel.app",
         "https://*.vercel.app"
     ]
     
@@ -49,4 +49,8 @@ if os.environ.get("VERCEL_ENV") == "production":
     
     # Update redirect URI for production
     if not settings.GOOGLE_REDIRECT_URI.startswith("https://"):
-        settings.GOOGLE_REDIRECT_URI = "https://fast-api-google-authentication-app.vercel.app/auth/google/callback"
+        settings.GOOGLE_REDIRECT_URI = "https://fast-api-google-authentication-bqox186fi.vercel.app/auth/google/callback"
+else:
+    # Local development: ensure we use SQLite
+    if not settings.DATABASE_URL.startswith("sqlite://"):
+        settings.DATABASE_URL = "sqlite:///./database.db"
