@@ -1,9 +1,11 @@
 import axios from 'axios';
 
 // Auto-detect API URL based on environment
-const API_URL = process.env.NODE_ENV === 'production' 
-  ? '/api/auth' // In production, use relative URL (handled by Vercel rewrites)
-  : 'http://localhost:8000/api/auth'; // In development, use full URL
+const API_URL = process.env.REACT_APP_API_URL || (
+  process.env.NODE_ENV === 'production' 
+    ? 'https://your-backend-domain.com/api/auth'  // Replace with your actual backend URL
+    : 'http://localhost:8000/api/auth'
+);
 
 // Create an axios instance with common settings
 const api = axios.create({
@@ -130,8 +132,43 @@ export const getCurrentUser = async () => {
 };
 
 // Logout user
-export const logout = () => {
-  localStorage.removeItem('token');
+export const logout = async () => {
+  try {
+    // Check if we have a Supabase session
+    const supabaseSession = localStorage.getItem('supabase_session');
+    
+    if (supabaseSession) {
+      // Sign out from Supabase
+      const { createClient } = await import('@supabase/supabase-js');
+      
+      const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+      const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+      
+      if (supabaseUrl && supabaseAnonKey) {
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+        
+        // Sign out from Supabase
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+          console.error('Supabase logout error:', error);
+        }
+      }
+      
+      // Clear Supabase session
+      localStorage.removeItem('supabase_session');
+    }
+    
+    // Clear JWT token
+    localStorage.removeItem('token');
+    
+    return true;
+  } catch (error) {
+    console.error('Logout error:', error);
+    // Even if there's an error, clear the local tokens
+    localStorage.removeItem('token');
+    localStorage.removeItem('supabase_session');
+    return true;
+  }
 };
 
 // Google OAuth functions
@@ -205,6 +242,140 @@ export const initiateGoogleLogin = async () => {
 export const isGoogleOAuthAvailable = async () => {
   try {
     await getGoogleAuthUrl();
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
+
+// Supabase OAuth functions
+export const getSupabaseAuthUrl = async (provider = "google") => {
+  try {
+    // Use direct Supabase OAuth instead of going through our backend
+    const { createClient } = await import('@supabase/supabase-js');
+    
+    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL ;
+    const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY ;
+    
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: provider,
+      options: {
+        redirectTo: 'http://localhost:3000/auth/supabase/callback'
+      }
+    });
+    
+    if (error) throw error;
+    
+    // The redirect will happen automatically
+    return data;
+  } catch (error) {
+    console.error('Get Supabase auth URL error:', error);
+    const errorMessage = extractErrorMessage(error);
+    
+    // Check if Supabase Auth is disabled
+    if (errorMessage.includes('not configured') || errorMessage.includes('disabled')) {
+      throw new Error('Supabase Auth is not configured on the server. Please contact the administrator.');
+    }
+    
+    throw errorMessage;
+  }
+};
+
+
+
+// Supabase email/password authentication
+export const supabaseSignup = async (email, password) => {
+  try {
+    const response = await api.post('/supabase/signup', { email, password });
+    
+    if (response.data.access_token) {
+      localStorage.setItem('token', response.data.access_token);
+    }
+    return response.data;
+  } catch (error) {
+    console.error('Supabase signup error:', error);
+    throw extractErrorMessage(error);
+  }
+};
+
+export const supabaseSignin = async (email, password) => {
+  try {
+    const response = await api.post('/supabase/signin', { email, password });
+    
+    if (response.data.access_token) {
+      localStorage.setItem('token', response.data.access_token);
+    }
+    return response.data;
+  } catch (error) {
+    console.error('Supabase signin error:', error);
+    throw extractErrorMessage(error);
+  }
+};
+
+// Direct Supabase OAuth (frontend-to-Supabase)
+export const initiateSupabaseLogin = async (provider = "google") => {
+  try {
+    // Use Supabase client directly for OAuth
+    const { createClient } = await import('@supabase/supabase-js');
+    
+    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+    const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Supabase configuration is missing. Please check your environment variables.');
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    
+    // Simple OAuth call - let Supabase handle everything
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: provider
+    });
+    
+    if (error) {
+      throw new Error(error.message);
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Supabase login initiation error:', error);
+    throw error;
+  }
+};
+
+// Get current Supabase user
+export const getSupabaseUser = async () => {
+  try {
+    const { createClient } = await import('@supabase/supabase-js');
+    
+    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+    const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Supabase configuration is missing');
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error) {
+      throw new Error(error.message);
+    }
+    
+    return user;
+  } catch (error) {
+    console.error('Get Supabase user error:', error);
+    throw error;
+  }
+};
+
+// Check if Supabase Auth is available
+export const isSupabaseAuthAvailable = async () => {
+  try {
+    await api.get('/supabase/authorize?provider=google');
     return true;
   } catch (error) {
     return false;

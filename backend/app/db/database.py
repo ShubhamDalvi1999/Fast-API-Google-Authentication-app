@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from backend.app.core.config import settings
+from app.core.config import settings
 import os
 
 # Explicitly register PostgreSQL dialect
@@ -13,12 +13,13 @@ try:
 except ImportError as e:
     print(f"Failed to import psycopg2: {e}")
 
-# Determine if we're in production (Vercel)
+# Determine if we're in production (Vercel) or using Supabase
 is_production = os.environ.get("VERCEL_ENV") == "production"
+use_supabase = os.environ.get("USE_SUPABASE", "false").lower() == "true"
 
 # Don't create engine during import - create it lazily
 def get_engine():
-    if is_production:
+    if is_production or use_supabase:
         # Production: Use PostgreSQL with connection pooling
         # Ensure the URL uses the correct format
         db_url = settings.DATABASE_URL

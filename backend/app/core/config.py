@@ -21,6 +21,13 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: Optional[str] = None
     GOOGLE_REDIRECT_URI: str = "http://localhost:3000/auth/google/callback"
     
+    # Supabase settings
+    SUPABASE_URL: Optional[str] = None
+    SUPABASE_ANON_KEY: Optional[str] = None
+    SUPABASE_SERVICE_ROLE_KEY: Optional[str] = None
+    
+
+    
     # CORS settings
     CORS_ORIGINS: list = [
         "http://localhost:3000",

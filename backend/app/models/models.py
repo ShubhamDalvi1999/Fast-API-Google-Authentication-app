@@ -42,9 +42,15 @@ class User(Base):
     google_name = Column(String(255), nullable=True)
     google_picture = Column(String(500), nullable=True)
     
+
+    
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
+    # Supabase fields
+    supabase_id = Column(String(255), unique=True, nullable=True)
+    supabase_email = Column(String(255), unique=True, nullable=True)
+    
     # Auth method tracking
-    auth_method = Column(String(50), default="local")  # "local" or "google" 
+    auth_method = Column(String(50), default="local")  # "local", "google", "supabase", or "both" 

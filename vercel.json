@@ -2,20 +2,12 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/main.py",
-      "use": "@vercel/python",
-      "config": {
-        "runtime": "python3.9"
-      }
-    },
-    {
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": { "distDir": "build" }
     }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/main.py" },
     { "src": "/static/(.*)", "dest": "/frontend/static/$1" },
     { "src": "/favicon.ico", "dest": "/frontend/favicon.ico" },
     { "src": "/manifest.json", "dest": "/frontend/manifest.json" },
@@ -23,9 +15,5 @@
     { "src": "/(.*)", "dest": "/frontend/index.html" }
   ],
   "buildCommand": "cd frontend && npm install && npm run build",
-  "outputDirectory": "frontend/build",
-  "env": {
-    "PYTHONPATH": ".",
-    "VERCEL_ENV": "production"
-  }
+  "outputDirectory": "frontend/build"
 } 
