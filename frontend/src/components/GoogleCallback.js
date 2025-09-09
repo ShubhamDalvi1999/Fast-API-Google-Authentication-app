@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { handleGoogleCallback } from '../services/authService';
+import { useAuth } from '../contexts/AuthContext';
 
 const GoogleCallback = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const { login: authLogin } = useAuth();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -55,6 +57,9 @@ const GoogleCallback = () => {
 
         // Exchange code for token
         await handleGoogleCallback(code, state);
+        
+        // Update auth context (we'll get user data from the token)
+        authLogin({ auth_method: 'google' });
         
         // Redirect to dashboard on success
         navigate('/dashboard');

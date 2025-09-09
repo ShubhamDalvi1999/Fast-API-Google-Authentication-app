@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { register, initiateGoogleLogin, initiateSupabaseLogin, supabaseSignup } from '../services/authService';
+import { useAuth } from '../contexts/AuthContext';
 
 const Register = () => {
   const [username, setUsername] = useState('');
@@ -18,6 +19,7 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [activeTab, setActiveTab] = useState('local'); // 'local', 'google', 'supabase'
   const navigate = useNavigate();
+  const { login: authLogin } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -101,6 +103,7 @@ const Register = () => {
     
     try {
       await supabaseSignup(supabaseEmail, supabasePassword);
+      authLogin({ username: supabaseEmail, auth_method: 'supabase' }); // Update auth context
       setSuccess('Registration successful! Redirecting to dashboard...');
       setTimeout(() => {
         navigate('/dashboard');

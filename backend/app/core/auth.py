@@ -11,9 +11,9 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 
 # Import from app modules
-        from app.db.database import get_db
-        from app.models.models import User
-        from app.core.google_oauth import google_oauth_service
+from app.db.database import get_db
+from app.models.models import User
+from app.core.google_oauth import google_oauth_service
 from app.core.supabase_auth import supabase_auth_service
 
 from passlib.context import CryptContext
@@ -120,13 +120,13 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
 @router.get("/users/me", response_model=UserResponse)
 async def get_user(current_user: Annotated[dict, Depends(get_current_user)], db: db_dependency):
     try:
-    user = db.query(User).filter(User.id == current_user["id"]).first()
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    
-    return {
-        "username": user.username,
-        "id": user.id,
+        user = db.query(User).filter(User.id == current_user["id"]).first()
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        
+        return {
+            "username": user.username,
+            "id": user.id,
             "email": user.email if user.email else None,
             "auth_method": user.auth_method,
             "supabase_id": user.supabase_id if user.supabase_id else None,

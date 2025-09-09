@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard';
 import Navbar from './components/Navbar';
 import GoogleCallback from './components/GoogleCallback';
 import SupabaseCallback from './components/SupabaseCallback';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
 
 // Component to handle Supabase error redirects and OAuth callbacks
@@ -47,8 +48,8 @@ const SupabaseErrorHandler = () => {
         // Import Supabase client
         const { createClient } = await import('@supabase/supabase-js');
         
-        const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-        const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
         
         if (!supabaseUrl || !supabaseAnonKey) {
           throw new Error('Supabase configuration is missing');
@@ -142,41 +143,49 @@ const SupabaseErrorHandler = () => {
   );
 };
 
-function App() {
-  const isAuthenticated = () => {
-    return localStorage.getItem('token') !== null;
-  };
-
-  const ProtectedRoute = ({ children }) => {
-    if (!isAuthenticated()) {
-      return <Navigate to="/login" />;
-    }
-    return children;
-  };
-
-  return (
-    <Router>
-      <div className="App">
-        <Navbar />
-        <div className="container">
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/auth/google/callback" element={<GoogleCallback />} />
-            <Route path="/auth/supabase/callback" element={<SupabaseCallback />} />
-            <Route path="/" element={<SupabaseErrorHandler />} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-          </Routes>
-        </div>
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="auth-card" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+        <div className="loading-spinner"></div>
       </div>
-    </Router>
+    );
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+  return children;
+};
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <div className="App">
+          <Navbar />
+          <div className="container">
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/auth/google/callback" element={<GoogleCallback />} />
+              <Route path="/auth/supabase/callback" element={<SupabaseCallback />} />
+              <Route path="/" element={<SupabaseErrorHandler />} />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+            </Routes>
+          </div>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 

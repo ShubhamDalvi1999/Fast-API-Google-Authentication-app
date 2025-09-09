@@ -141,8 +141,8 @@ export const logout = async () => {
       // Sign out from Supabase
       const { createClient } = await import('@supabase/supabase-js');
       
-      const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-      const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
       
       if (supabaseUrl && supabaseAnonKey) {
         const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -254,8 +254,8 @@ export const getSupabaseAuthUrl = async (provider = "google") => {
     // Use direct Supabase OAuth instead of going through our backend
     const { createClient } = await import('@supabase/supabase-js');
     
-    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL ;
-    const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY ;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ;
     
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
     
@@ -320,8 +320,8 @@ export const initiateSupabaseLogin = async (provider = "google") => {
     // Use Supabase client directly for OAuth
     const { createClient } = await import('@supabase/supabase-js');
     
-    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-    const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     
     if (!supabaseUrl || !supabaseAnonKey) {
       throw new Error('Supabase configuration is missing. Please check your environment variables.');
@@ -350,8 +350,8 @@ export const getSupabaseUser = async () => {
   try {
     const { createClient } = await import('@supabase/supabase-js');
     
-    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-    const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     
     if (!supabaseUrl || !supabaseAnonKey) {
       throw new Error('Supabase configuration is missing');

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { login, initiateGoogleLogin, initiateSupabaseLogin, supabaseSignin } from '../services/authService';
+import { useAuth } from '../contexts/AuthContext';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -15,6 +16,7 @@ const Login = () => {
   const [activeTab, setActiveTab] = useState('local'); // 'local', 'google', 'supabase'
   const navigate = useNavigate();
   const location = useLocation();
+  const { login: authLogin } = useAuth();
 
   // Check for error parameters in URL
   useEffect(() => {
@@ -40,6 +42,7 @@ const Login = () => {
 
     try {
       await login(username, password);
+      authLogin({ username, auth_method: 'local' }); // Update auth context
       navigate('/dashboard');
     } catch (err) {
       console.error('Login error:', err);
@@ -96,6 +99,7 @@ const Login = () => {
     
     try {
       await supabaseSignin(supabaseEmail, supabasePassword);
+      authLogin({ username: supabaseEmail, auth_method: 'supabase' }); // Update auth context
       navigate('/dashboard');
     } catch (err) {
       console.error('Supabase email login error:', err);

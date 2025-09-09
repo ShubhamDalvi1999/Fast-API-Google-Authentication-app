@@ -1,8 +1,8 @@
 // Direct Supabase OAuth service
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://yaefwshrnbrkzugwfgra.supabase.co'
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhZWZ3c2hybmJya3p1Z3dmZ3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2MzgwODAsImV4cCI6MjA3MTIxNDA4MH0.8aXJwgeSQjDuffKt7nBw7nKzp4MvTh1o2SZr85cnwqM'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://yaefwshrnbrkzugwfgra.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhZWZ3c2hybmJya3p1Z3dmZ3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2MzgwODAsImV4cCI6MjA3MTIxNDA4MH0.8aXJwgeSQjDuffKt7nBw7nKzp4MvTh1o2SZr85cnwqM'
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 

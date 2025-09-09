@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const SupabaseCallback = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const { login: authLogin } = useAuth();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -45,8 +47,8 @@ const SupabaseCallback = () => {
         // Import Supabase client
         const { createClient } = await import('@supabase/supabase-js');
         
-        const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-        const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
         
         if (!supabaseUrl || !supabaseAnonKey) {
           throw new Error('Supabase configuration is missing');
@@ -80,6 +82,15 @@ const SupabaseCallback = () => {
         // Store Supabase session in localStorage for our app
         localStorage.setItem('supabase_session', JSON.stringify(session));
         localStorage.setItem('token', accessToken);
+        
+        // Update auth context
+        authLogin({
+          username: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Supabase User',
+          email: user.email,
+          auth_method: 'supabase',
+          supabase_id: user.id,
+          supabase_email: user.email
+        });
         
         // Redirect to dashboard on success
         navigate('/dashboard');
